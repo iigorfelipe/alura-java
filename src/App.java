@@ -1,37 +1,34 @@
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
 import java.util.List;
-import java.util.Map;
 
 public class App {
     public static void main(String[] args) throws Exception {
 
-        String url = "https://mocki.io/v1/9a7c1ca9-29b4-4eb3-8306-1adb9d159060";
-        URI address = URI.create(url);
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder(address).GET().build();
-        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
-        String body = response.body();
+        // String url = "https://mocki.io/v1/9a7c1ca9-29b4-4eb3-8306-1adb9d159060";
+        // IMDBContentExtractor extractor = new IMDBContentExtractor();
 
-        JsonParser parser = new JsonParser();
-        List<Map<String, String>> listFilmes = parser.parse(body);
+        String url = "https://api.mocki.io/v2/549a5d8b/NASA-APOD";
+        NASAContentExtractor extractor = new NASAContentExtractor();
+
+        ClientHTTP HTTP = new ClientHTTP();
+        String json = HTTP.fetchDate(url);
+
+        List<Content> contents = extractor.contentExtractor(json);
         
         var stickerGenerator = new StickerGenerator();
 
-        for (Map<String,String> film : listFilmes) {
+        for (int i = 0; i < 3; i += 1) {
 
-            String title = film.get("title");
-            String image = film.get("image");
+            Content content = contents.get(i);
 
-            InputStream inputStream = new URL(image).openStream();
-            String nameFile = title + ".png";
+            InputStream inputStream = new URL(content.getUrlImage()).openStream();
+            String nameFile = "output/" + content.getTitle() + ".png";
 
             stickerGenerator.createSticker(inputStream, nameFile);
+
+            System.out.println(content.getTitle());
+            System.out.println();
         }
     }
 }
